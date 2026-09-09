@@ -1,0 +1,14 @@
+# nodeadm config for joining an on-prem host to EKS via SSM hybrid activation.
+# Export CLUSTER/REGION and the activation values (README step 2b), then:
+#   envsubst < nodeConfig.yaml > nodeConfig.rendered.yaml
+#   sudo nodeadm init -c file://nodeConfig.rendered.yaml
+apiVersion: node.eks.aws/v1alpha1
+kind: NodeConfig
+spec:
+  cluster:
+    name: ${EKS_CLUSTER_NAME}
+    region: ${AWS_REGION}
+  hybrid:
+    ssm:
+      activationCode: ${SSM_ACTIVATION_CODE}
+      activationId: ${SSM_ACTIVATION_ID}

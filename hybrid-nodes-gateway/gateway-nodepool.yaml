@@ -1,0 +1,77 @@
+# Karpenter NodeClass + NodePool for the Hybrid Nodes Gateway EC2 hosts (EKS
+# Auto Mode). Must exist BEFORE the gateway Helm install. Export the Auto Mode
+# node role NAME (spec.role takes the NAME, not the ARN - max 64 bytes) first
+# (see README 5b for the aws iam list-roles ... .RoleName query), then:
+#   envsubst < hybrid-nodes-gateway/gateway-nodepool.yaml | kubectl apply -f -
+#
+# Instance selection: category c/m/r + generation > 4 (gen5+) already restricts
+# Karpenter to Nitro instances with adequate network bandwidth. AWS recommends
+# c6i.xlarge / c6in.xlarge (network-optimized) / m6i.xlarge for standard
+# production (10-100 hybrid nodes); c6in.2xlarge / c5n.2xlarge+ for high
+# throughput (100+ nodes). Gateway scales VERTICALLY (active-standby, one leader
+# forwards all traffic)  -  size for peak cross-network bandwidth, not replica count.
+---
+apiVersion: eks.amazonaws.com/v1
+kind: NodeClass
+metadata:
+  name: hybrid-gateway
+spec:
+  advancedNetworking:
+    sourceDestCheck: DisabledPrimaryENI
+  role: ${AUTO_MODE_NODE_ROLE}
+  securityGroupSelectorTerms:
+    - tags:
+        aws:eks:cluster-name: ${EKS_CLUSTER_NAME}
+  # Gateway nodes must span two AZs for HA  -  select the two private subnets.
+  subnetSelectorTerms:
+    - id: ${PRIVATE_SUBNET_1}
+    - id: ${PRIVATE_SUBNET_2}
+---
+apiVersion: karpenter.sh/v1
+kind: NodePool
+metadata:
+  name: hybrid-gateway
+spec:
+  template:
+    metadata:
+      labels:
+        hybrid-gateway-node: "true"
+    spec:
+      expireAfter: 336h
+      nodeClassRef:
+        group: eks.amazonaws.com
+        kind: NodeClass
+        name: hybrid-gateway
+      requirements:
+        - key: karpenter.sh/capacity-type
+          operator: In
+          values:
+            - on-demand
+        - key: eks.amazonaws.com/instance-category
+          operator: In
+          values:
+            - c
+            - m
+            - r
+        # generation > 4 => gen5+ Nitro instances (c6i/c6in/c7i/m6i/r6i, c5n, ...)
+        - key: eks.amazonaws.com/instance-generation
+          operator: Gt
+          values:
+            - "4"
+        - key: kubernetes.io/arch
+          operator: In
+          values:
+            - amd64
+        - key: kubernetes.io/os
+          operator: In
+          values:
+            - linux
+      taints:
+        - key: hybrid-gateway-node
+          effect: NoSchedule
+      terminationGracePeriod: 24h0m0s
+  disruption:
+    budgets:
+      - nodes: 10%
+    consolidateAfter: 30s
+    consolidationPolicy: WhenEmptyOrUnderutilized

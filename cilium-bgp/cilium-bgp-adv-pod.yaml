@@ -1,0 +1,11 @@
+# Advertises each hybrid node's PodCIDR to the on-prem router over BGP.
+# Apply this to make on-prem pod networks routable from your local network.
+apiVersion: cilium.io/v2
+kind: CiliumBGPAdvertisement
+metadata:
+  name: bgp-advertisement-pod
+  labels:
+    advertise: bgp
+spec:
+  advertisements:
+    - advertisementType: "PodCIDR"
