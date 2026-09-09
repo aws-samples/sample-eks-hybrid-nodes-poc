@@ -468,3 +468,9 @@ section in this post:
 - [A deep dive into Amazon EKS Hybrid Nodes](https://aws.amazon.com/blogs/containers/a-deep-dive-into-amazon-eks-hybrid-nodes/)
 - [Deep dive into cluster networking for Amazon EKS Hybrid Nodes](https://aws.amazon.com/blogs/containers/deep-dive-into-cluster-networking-for-amazon-eks-hybrid-nodes/)
 - [Simplify hybrid Kubernetes networking with Amazon EKS Hybrid Nodes gateway](https://aws.amazon.com/blogs/containers/simplify-hybrid-kubernetes-networking-with-amazon-eks-hybrid-nodes-gateway/)
+
+---
+
+## License
+
+This project is licensed under the MIT-0 License - see the [LICENSE](LICENSE) file.
