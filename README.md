@@ -366,6 +366,11 @@ envsubst < hybrid-nodes-gateway/gateway-nodepool.yaml | kubectl apply -f -
 
 ```
 
+> **Not using EKS Auto Mode?** Apply [`gateway-mng.yaml`](hybrid-nodes-gateway/gateway-mng.yaml)
+> instead of the Karpenter NodePool above - it provisions fixed managed node groups,
+> one per AZ. See the file header for the source/dest-check requirement, and add
+> `--set autoMode.enabled=false` to the gateway Helm install in step 4.
+
 
 **3) Grant VPC route-table permissions via EKS Pod Identity (recommended).** 
 
