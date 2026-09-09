@@ -1,0 +1,14 @@
+# Rendered output (never commit expanded manifests — real IDs / activation codes)
+*.rendered.yaml
+*.rendered.yml
+*.rendered.json
+rendered/
+nodeConfig.rendered.yaml
+aev.rendered.json
+# Downloaded upstream template
+hybrid-nodes-creds/hybrid-ssm-cfn.yaml
+# Local overrides / secrets
+env.local.sh
+*.orig
+*.pem
+*.key

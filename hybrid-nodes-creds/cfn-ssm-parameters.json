@@ -1,0 +1,7 @@
+{
+  "Parameters": {
+    "RoleName": "${ROLE_NAME}",
+    "SSMDeregisterConditionTagKey": "EKSClusterARN",
+    "SSMDeregisterConditionTagValue": "${EKS_CLUSTER_ARN}"
+  }
+}

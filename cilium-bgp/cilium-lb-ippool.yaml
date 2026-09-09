@@ -1,0 +1,14 @@
+# LoadBalancer IP pool advertised over BGP (via cilium-bgp-adv-lb.yaml).
+# IPs from this pool are assigned only to the named Service  -  aligned with the
+# AWS user guide example (tcp-sample-service). Change the name to match your
+# Service, keeping it consistent with cilium-bgp-adv-lb.yaml's selector.
+apiVersion: cilium.io/v2
+kind: CiliumLoadBalancerIPPool
+metadata:
+  name: tcp-service-pool
+spec:
+  blocks:
+    - cidr: ${LB_POOL_CIDR}
+  serviceSelector:
+    matchLabels:
+      io.kubernetes.service.name: tcp-sample-service

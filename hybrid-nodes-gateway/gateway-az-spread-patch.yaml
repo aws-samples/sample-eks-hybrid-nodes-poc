@@ -1,0 +1,29 @@
+# WHY: the gateway Helm chart ships only a SOFT zone anti-affinity
+# (podAntiAffinity preferredDuringScheduling, weight 100). If the scheduler
+# cannot place a pod in a second AZ at scheduling time (e.g. Karpenter has only
+# provisioned nodes in one AZ), the soft rule silently co-locates both gateway
+# pods in the same AZ - so an AZ failure can take out BOTH leader and standby.
+#
+# This topologySpreadConstraints makes it HARD: maxSkew 1 across
+# topology.kubernetes.io/zone with whenUnsatisfiable=DoNotSchedule. The second
+# pod stays Pending rather than share an AZ, which forces Karpenter to provision
+# a node in the other AZ. Result: deterministic one-gateway-per-AZ, and it
+# self-heals back to 1-per-AZ after a node/AZ failure.
+#
+# Apply AFTER the gateway Helm install (README step 5b):
+#   kubectl -n eks-hybrid-nodes-gateway patch deployment eks-hybrid-nodes-gateway \
+#     --type=strategic --patch-file hybrid-nodes-gateway/gateway-az-spread-patch.yaml
+#
+# Prereq: the gateway NodePool/NodeClass (or managed node groups) must span 2 AZs,
+# otherwise the second pod has nowhere to go and stays Pending forever.
+spec:
+  template:
+    spec:
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: eks-hybrid-nodes-gateway
+              app.kubernetes.io/instance: eks-hybrid-nodes-gateway

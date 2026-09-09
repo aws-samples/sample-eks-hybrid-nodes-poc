@@ -1,0 +1,44 @@
+{
+  "replicaCount": 3,
+  "affinity": {
+    "nodeAffinity": {
+      "requiredDuringSchedulingIgnoredDuringExecution": {
+        "nodeSelectorTerms": [
+          {
+            "matchExpressions": [
+              { "key": "kubernetes.io/os", "operator": "In", "values": ["linux"] },
+              { "key": "kubernetes.io/arch", "operator": "In", "values": ["amd64", "arm64"] }
+            ]
+          }
+        ]
+      }
+    },
+    "podAntiAffinity": {
+      "preferredDuringSchedulingIgnoredDuringExecution": [
+        {
+          "weight": 100,
+          "podAffinityTerm": {
+            "labelSelector": { "matchExpressions": [ { "key": "k8s-app", "operator": "In", "values": ["kube-dns"] } ] },
+            "topologyKey": "kubernetes.io/hostname"
+          }
+        },
+        {
+          "weight": 50,
+          "podAffinityTerm": {
+            "labelSelector": { "matchExpressions": [ { "key": "k8s-app", "operator": "In", "values": ["kube-dns"] } ] },
+            "topologyKey": "topology.kubernetes.io/zone"
+          }
+        }
+      ]
+    }
+  },
+  "topologySpreadConstraints": [
+    {
+      "maxSkew": 1,
+      "topologyKey": "eks.amazonaws.com/compute-type",
+      "whenUnsatisfiable": "DoNotSchedule",
+      "labelSelector": { "matchLabels": { "k8s-app": "kube-dns" } }
+    }
+  ],
+  "trafficDistribution": "PreferSameZone"
+}

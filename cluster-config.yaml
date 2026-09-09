@@ -1,0 +1,37 @@
+# EKS Hybrid Nodes cluster (EKS Auto Mode).
+# Apply:  envsubst < cluster-config.yaml | eksctl create cluster -f -
+# (export the variables shown in the README for this step first.)
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+metadata:
+  name: ${EKS_CLUSTER_NAME}
+  region: ${AWS_REGION}
+  version: "${K8S_VERSION}"
+
+# Disable default add-ons for Auto Mode managed cloud nodes. Cilium replaces the VPC CNI on hybrid
+# nodes; CoreDNS and kube-proxy are deployed on hybrid nodes as MANAGED add-ons in step 3
+addonsConfig:
+  disableDefaultAddons: true
+
+vpc:
+  subnets:
+    public:
+      public-one: { id: "${PUBLIC_SUBNET_1}" }
+      public-two: { id: "${PUBLIC_SUBNET_2}" }
+    private:
+      private-one: { id: "${PRIVATE_SUBNET_1}" }
+      private-two: { id: "${PRIVATE_SUBNET_2}" }
+  controlPlaneSubnetIDs: ["${PRIVATE_SUBNET_1}", "${PRIVATE_SUBNET_2}"]
+  # controlPlaneSecurityGroupIDs: ["ADDITIONAL_CONTROL_PLANE_SECURITY_GROUP_ID"]
+
+autoModeConfig:
+  enabled: true
+  nodePools: ["system", "general-purpose"]
+
+remoteNetworkConfig:
+  iam:
+    provider: ssm          # ssm | ira
+  remoteNodeNetworks:
+  - cidrs: ["${REMOTE_NODE_CIDR}"]
+  remotePodNetworks:        
+  - cidrs: ["${REMOTE_POD_CIDR}"]

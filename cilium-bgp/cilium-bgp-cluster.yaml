@@ -1,0 +1,23 @@
+# Peers the hybrid nodes with the on-prem router. Export the BGP_* vars
+# (see README step 5a), then:
+#   envsubst < cilium-bgp/cilium-bgp-cluster.yaml | kubectl apply -f -
+apiVersion: cilium.io/v2
+kind: CiliumBGPClusterConfig
+metadata:
+  name: cilium-bgp
+spec:
+  nodeSelector:
+    matchExpressions:
+    - key: eks.amazonaws.com/compute-type
+      operator: In
+      values:
+      - hybrid
+  bgpInstances:
+  - name: "${BGP_INSTANCE_NAME}"
+    localASN: ${BGP_LOCAL_ASN}
+    peers:
+    - name: "${BGP_PEER_NAME}"
+      peerASN: ${BGP_PEER_ASN}
+      peerAddress: ${BGP_PEER_ADDRESS}
+      peerConfigRef:
+        name: "cilium-peer"

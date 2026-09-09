@@ -1,0 +1,61 @@
+# Cilium values for EKS Hybrid Nodes  -  AWS-maintained build.
+#
+# Install with the AWS-maintained Cilium chart from ECR Public (required for AWS
+# support; do NOT use the upstream helm.cilium.io chart):
+#   envsubst < cilium-values.yaml > /tmp/cilium-values.yaml
+#   helm install cilium oci://public.ecr.aws/eks/cilium/cilium \
+#     --version ${CILIUM_VERSION} -n kube-system -f /tmp/cilium-values.yaml
+#
+# BGP control plane is enabled here by default. It is INERT until you apply the
+# CRs in cilium-bgp/ (ClusterConfig/PeerConfig/Advertisement/LBIPPool)  -  enabling
+# it alone advertises nothing, so it is safe to leave on for every deployment.
+#
+# For the Hybrid Nodes Gateway (Option B), enable VTEP on this install afterward:
+#   helm upgrade cilium ... --reuse-values --set vtep.enabled=true --set l7Proxy=false
+#   (see README step 5b)
+#
+
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: eks.amazonaws.com/compute-type
+          operator: In
+          values:
+          - hybrid
+
+ipam:
+  mode: cluster-pool
+  operator:
+    clusterPoolIPv4MaskSize: ${POD_CIDR_MASK_SIZE}
+    clusterPoolIPv4PodCIDRList:
+    - ${POD_CIDR}
+
+operator:
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: eks.amazonaws.com/compute-type
+            operator: In
+            values:
+            - hybrid
+  unmanagedPodWatcher:
+    restart: false
+
+loadBalancer:
+  serviceTopology: true
+
+envoy:
+  enabled: false
+
+kubeProxyReplacement: "false"
+
+nodePort:
+  enabled: true
+
+# Enables the BGP Control Plane, requires additional BGP config
+bgpControlPlane:
+  enabled: true

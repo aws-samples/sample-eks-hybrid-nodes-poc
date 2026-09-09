@@ -1,0 +1,19 @@
+# Advertises the LoadBalancerIP of matching Services to the on-prem router.
+# The selector matches by Service name (Cilium sets the io.kubernetes.service.name
+# label automatically), so only the named Service's VIP is advertised. Change the name 
+# to match your Service, and keep it consistent with cilium-lb-ippool.yaml's serviceSelector.
+apiVersion: cilium.io/v2
+kind: CiliumBGPAdvertisement
+metadata:
+  name: bgp-advertisement-lb
+  labels:
+    advertise: bgp
+spec:
+  advertisements:
+    - advertisementType: "Service"
+      service:
+        addresses:
+          - LoadBalancerIP
+      selector:
+        matchLabels:
+          io.kubernetes.service.name: tcp-sample-service

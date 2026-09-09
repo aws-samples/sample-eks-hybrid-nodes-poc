@@ -1,0 +1,44 @@
+# For clusters NOT using Auto Mode for the gateway: 
+# fixed managed node groups, one per AZ. Install the Helm chart with
+# --set autoMode.enabled=false when using this path. Render before apply:
+#   envsubst < hybrid-nodes-gateway/gateway-mng.yaml | eksctl create nodegroup -f -
+#
+# Instance type: AWS recommends c6i.xlarge / c6in.xlarge / m6i.xlarge for standard
+# production; c6in.2xlarge / c5n.2xlarge+ for high throughput (see README 5b).
+#
+# IMPORTANT: source/dest check. Auto Mode's NodeClass disables it declaratively;
+# eksctl managed node groups do NOT. For MNG you must disable it via a custom
+# launch template (user data calling ec2:ModifyNetworkInterfaceAttribute on the
+# primary ENI)  -  see the "Managed node groups" section of the AWS getting-started
+# guide. Without it the gateway can't forward transit traffic.
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+metadata:
+  name: ${EKS_CLUSTER_NAME}
+  region: ${AWS_REGION}
+
+managedNodeGroups:
+  - name: gateway-2a
+    instanceType: c6i.xlarge
+    desiredCapacity: 1
+    privateNetworking: true
+    availabilityZones:
+      - ${AWS_REGION}a
+    labels:
+      hybrid-gateway-node: "true"
+    taints:
+      - key: hybrid-gateway-node
+        value: "true"
+        effect: NoSchedule
+  - name: gateway-2b
+    instanceType: c6i.xlarge
+    desiredCapacity: 1
+    privateNetworking: true
+    availabilityZones:
+      - ${AWS_REGION}b
+    labels:
+      hybrid-gateway-node: "true"
+    taints:
+      - key: hybrid-gateway-node
+        value: "true"
+        effect: NoSchedule

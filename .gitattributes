@@ -1,0 +1,9 @@
+# GitHub Linguist language-detection overrides.
+#
+# This is a Kubernetes-manifests / IaC repo: almost all of it is YAML and JSON.
+# Linguist classifies both as "data" languages, which are excluded from the
+# language bar by default. Force them to be counted so the stats reflect the
+# repo accurately.
+*.yaml linguist-detectable=true
+*.yml  linguist-detectable=true
+*.json linguist-detectable=true
